@@ -6,39 +6,47 @@ import (
 	"os"
 )
 
+type Step struct {
+	Evals       [][]uint64 `json:"evals"`
+	MerkleProof struct {
+		Siblings []HashElements `json:"siblings"`
+	} `json:"merkle_proof"`
+}
+
+type OpeningProof struct {
+	CommitPhaseMerkleCaps [][]HashElements `json:"commit_phase_merkle_caps"`
+	QueryRoundProofs      []struct {
+		InitialTreesProof struct {
+			EvalsProofs []EvalProofRaw `json:"evals_proofs"`
+		} `json:"initial_trees_proof"`
+		Steps []Step `json:"steps"`
+	} `json:"query_round_proofs"`
+	FinalPoly struct {
+		Coeffs [][]uint64 `json:"coeffs"`
+	} `json:"final_poly"`
+	PowWitness uint64 `json:"pow_witness"`
+}
+
+type Openings struct {
+	Constants       [][]uint64 `json:"constants"`
+	PlonkSigmas     [][]uint64 `json:"plonk_sigmas"`
+	Wires           [][]uint64 `json:"wires"`
+	PlonkZs         [][]uint64 `json:"plonk_zs"`
+	PlonkZsNext     [][]uint64 `json:"plonk_zs_next"`
+	PartialProducts [][]uint64 `json:"partial_products"`
+	QuotientPolys   [][]uint64 `json:"quotient_polys"`
+}
+
+type Proof struct {
+	WiresCap                  []HashElements `json:"wires_cap"`
+	PlonkZsPartialProductsCap []HashElements `json:"plonk_zs_partial_products_cap"`
+	QuotientPolysCap          []HashElements `json:"quotient_polys_cap"`
+	Openings                  Openings       `json:"openings"`
+	OpeningProof              OpeningProof   `json:"opening_proof"`
+}
+
 type ProofWithPublicInputsRaw struct {
-	Proof struct {
-		WiresCap                  []string `json:"wires_cap"`
-		PlonkZsPartialProductsCap []string `json:"plonk_zs_partial_products_cap"`
-		QuotientPolysCap          []string `json:"quotient_polys_cap"`
-		Openings                  struct {
-			Constants       [][]uint64 `json:"constants"`
-			PlonkSigmas     [][]uint64 `json:"plonk_sigmas"`
-			Wires           [][]uint64 `json:"wires"`
-			PlonkZs         [][]uint64 `json:"plonk_zs"`
-			PlonkZsNext     [][]uint64 `json:"plonk_zs_next"`
-			PartialProducts [][]uint64 `json:"partial_products"`
-			QuotientPolys   [][]uint64 `json:"quotient_polys"`
-		} `json:"openings"`
-		OpeningProof struct {
-			CommitPhaseMerkleCaps [][]string `json:"commit_phase_merkle_caps"`
-			QueryRoundProofs      []struct {
-				InitialTreesProof struct {
-					EvalsProofs []EvalProofRaw `json:"evals_proofs"`
-				} `json:"initial_trees_proof"`
-				Steps []struct {
-					Evals       [][]uint64 `json:"evals"`
-					MerkleProof struct {
-						Siblings []string `json:"siblings"`
-					} `json:"merkle_proof"`
-				} `json:"steps"`
-			} `json:"query_round_proofs"`
-			FinalPoly struct {
-				Coeffs [][]uint64 `json:"coeffs"`
-			} `json:"final_poly"`
-			PowWitness uint64 `json:"pow_witness"`
-		} `json:"opening_proof"`
-	} `json:"proof"`
+	Proof        Proof    `json:"proof"`
 	PublicInputs []uint64 `json:"public_inputs"`
 }
 
@@ -52,12 +60,12 @@ func (e *EvalProofRaw) UnmarshalJSON(data []byte) error {
 }
 
 type MerkleProofRaw struct {
-	Hash []string
+	Hash []HashElements
 }
 
 func (m *MerkleProofRaw) UnmarshalJSON(data []byte) error {
 	type SiblingObject struct {
-		Siblings []string // "siblings"
+		Siblings []HashElements // "siblings"
 	}
 
 	var siblings SiblingObject
@@ -65,7 +73,7 @@ func (m *MerkleProofRaw) UnmarshalJSON(data []byte) error {
 		panic(err)
 	}
 
-	m.Hash = make([]string, len(siblings.Siblings))
+	m.Hash = make([]HashElements, len(siblings.Siblings))
 	copy(m.Hash[:], siblings.Siblings)
 
 	return nil
@@ -85,8 +93,12 @@ type ProofChallengesRaw struct {
 }
 
 type VerifierOnlyCircuitDataRaw struct {
-	ConstantsSigmasCap []string `json:"constants_sigmas_cap"`
-	CircuitDigest      string   `json:"circuit_digest"`
+	ConstantsSigmasCap []HashElements `json:"constants_sigmas_cap"`
+	CircuitDigest      HashElements   `json:"circuit_digest"`
+}
+
+type HashElements struct {
+	Elements []uint64 `json:"elements"`
 }
 
 func ReadProofWithPublicInputs(path string) ProofWithPublicInputsRaw {

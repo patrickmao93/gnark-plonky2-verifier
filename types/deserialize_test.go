@@ -5,9 +5,9 @@ import (
 )
 
 func TestReadProofWithPublicInputs(t *testing.T) {
-	ReadProofWithPublicInputs("../testdata/decode_block/proof_with_public_inputs.json")
+	ReadProofWithPublicInputs("../testdata/fib_small/proof_with_public_inputs.json")
 }
 
 func TestReadVerifierOnlyCircuitData(t *testing.T) {
-	ReadVerifierOnlyCircuitData("../testdata/decode_block/verifier_only_circuit_data.json")
+	ReadVerifierOnlyCircuitData("../testdata/fib_small/verifier_only_circuit_data.json")
 }
